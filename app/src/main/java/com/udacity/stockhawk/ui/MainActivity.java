@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             QuoteSyncJob.syncImmediately(this);
         } else {
             swipeRefreshLayout.setRefreshing(false);
-            Toast.makeText(this, "u fuckt up", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Stock Symbol not found", Toast.LENGTH_SHORT).show();
         }
     }
 
