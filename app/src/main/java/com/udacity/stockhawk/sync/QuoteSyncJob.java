@@ -124,6 +124,7 @@ public final class QuoteSyncJob
 
             Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
             context.sendBroadcast(dataUpdatedIntent);
+            //TODO: Register a receiver in main activity.
 
         }
         catch (IOException exception)

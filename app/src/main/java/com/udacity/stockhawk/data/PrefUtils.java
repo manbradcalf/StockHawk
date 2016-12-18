@@ -54,6 +54,7 @@ public final class PrefUtils {
     }
 
     public static void addStock(Context context, String symbol) {
+        //TODO: Add the check to make sure the stock exists
         editStockPref(context, symbol, true);
     }
 
