@@ -19,10 +19,17 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.udacity.stockhawk.Events.SymbolValidationEvent;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
 import com.udacity.stockhawk.sync.QuoteSyncJob;
+import com.udacity.stockhawk.sync.ValidateSymbol;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
+import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -77,8 +84,31 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 getContentResolver().delete(Contract.Quote.makeUriForStock(symbol), null, null);
             }
         }).attachToRecyclerView(stockRecyclerView);
+    }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
 
+    @Override
+    public void onStop() {
+        super.onStart();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe
+    public void onMessageEvent(SymbolValidationEvent event) {
+        Boolean validated = event.getValidated();
+        if (validated) {
+            swipeRefreshLayout.setRefreshing(true);
+            PrefUtils.addStock(this, event.getSymbol());
+            QuoteSyncJob.syncImmediately(this);
+        } else {
+            swipeRefreshLayout.setRefreshing(false);
+            Toast.makeText(this, "u fuckt up", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private boolean networkUp() {
@@ -118,14 +148,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         if (symbol != null && !symbol.isEmpty()) {
 
             if (networkUp()) {
-                swipeRefreshLayout.setRefreshing(true);
+                ValidateSymbol validator = new ValidateSymbol();
+                validator.execute(symbol);
             } else {
                 String message = getString(R.string.toast_stock_added_no_connectivity, symbol);
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             }
-
-            PrefUtils.addStock(this, symbol);
-            QuoteSyncJob.syncImmediately(this);
         }
     }
 
