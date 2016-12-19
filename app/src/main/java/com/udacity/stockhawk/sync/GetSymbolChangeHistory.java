@@ -40,11 +40,21 @@ public class GetSymbolChangeHistory extends AsyncTask<String, Void, List<Histori
     @Override
     protected void onPostExecute(List<HistoricalQuote> historicalQuotes)
     {
+        // Creating our iterator to iterate through the historical quotes
+        // returned by doInBackground
         Iterator<HistoricalQuote> iterator = historicalQuotes.iterator();
+
+        // Newing up our ArrayList of DataPoints
         List<DataPoint> dataPoints = new ArrayList<>();
 
+        // Instantiating i for the loop
         int i = -1;
 
+        // This while loop iterates through the list of HistoricalQuotes
+        // and adds the value of i as the first data point (to serve as the X axis) and the ClosePrice value
+        // taken from the historicalQuote as the second data point (Y Axis). Once the iteration is finished
+        // we will have an arraylist of DataPoints to send to our DetailActivity via
+        // HistoricalQuotesMappedToDataSetEvent
         while (iterator.hasNext()) {
             HistoricalQuote quote = iterator.next();
             i++;
