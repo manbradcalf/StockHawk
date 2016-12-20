@@ -1,14 +1,10 @@
 package com.udacity.stockhawk.ui;
 
-import android.graphics.DashPathEffect;
-import android.graphics.Paint;
-import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.udacity.stockhawk.Events.HistoricalQuotesMappedToDataSetEvent;
@@ -65,18 +61,8 @@ public class StockDetailActivity extends AppCompatActivity
         List<DataPoint> dataPoints = event.getDataPoints();
         DataPoint[] dataPointArray = dataPoints.toArray(new DataPoint[0]);
         LineGraphSeries<DataPoint> series = new LineGraphSeries<DataPoint>(dataPointArray);
-        graphView.getViewport().setScalable(true);
         graphView.addSeries(series);
-        // Setting the graphView to format the date objects
-        // on the x axis to be readable
-        graphView.getGridLabelRenderer().setLabelFormatter(
-                new DateAsXAxisLabelFormatter(
-                        this, java.text.SimpleDateFormat.getDateInstance(java.text.SimpleDateFormat.SHORT)));
-
-        graphView.getViewport().setMinX(dataPoints.get(0).getX());
-        graphView.getViewport().setMaxX(dataPoints.get(10).getX());
-        graphView.getViewport().setXAxisBoundsManual(true);
-        graphView.getGridLabelRenderer().setHumanRounding(false);
         graphView.setVisibility(View.VISIBLE);
     }
+
 }
