@@ -1,7 +1,10 @@
 package com.udacity.stockhawk.sync;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.udacity.stockhawk.Events.HistoricalQuotesMappedToDataSetEvent;
 
@@ -9,6 +12,8 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,9 +51,7 @@ public class GetSymbolChangeHistory extends AsyncTask<String, Void, List<Histori
 
         // Newing up our ArrayList of DataPoints
         List<DataPoint> dataPoints = new ArrayList<>();
-
-        // Instantiating i for the loop
-        int i = -1;
+//        int i = -1;
 
         // This while loop iterates through the list of HistoricalQuotes
         // and adds the value of i as the first data point (to serve as the X axis) and the ClosePrice value
@@ -57,10 +60,14 @@ public class GetSymbolChangeHistory extends AsyncTask<String, Void, List<Histori
         // HistoricalQuotesMappedToDataSetEvent
         while (iterator.hasNext()) {
             HistoricalQuote quote = iterator.next();
-            i++;
+            Date date = quote.getDate().getTime();
             Double closePrice = quote.getClose().doubleValue();
-            dataPoints.add(new DataPoint(i, closePrice));
+            dataPoints.add(new DataPoint(date, closePrice));
+
         }
+
+        Log.d("DateArray: ", dataPoints.toString());
+
 
         HistoricalQuotesMappedToDataSetEvent event = new HistoricalQuotesMappedToDataSetEvent();
         event.setDataPoints(dataPoints);
