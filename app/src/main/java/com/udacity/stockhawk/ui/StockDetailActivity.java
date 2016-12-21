@@ -34,17 +34,20 @@ public class StockDetailActivity extends AppCompatActivity
     @BindView(graph)
     GraphView graphView;
 
+    private String mSymbol;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.stock_detail);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ButterKnife.bind(this);
         graphView.setVisibility(View.GONE);
         Bundle bundle = this.getIntent().getExtras();
-        String symbol = bundle.getString("symbol");
-        GetSymbolChangeHistory getHistoryTask = new GetSymbolChangeHistory();
-        getHistoryTask.execute(symbol);
+        mSymbol = bundle.getString("symbol");
+        GetSymbolChangeHistory getHistoryTask = new GetSymbolChangeHistory(this);
+        getHistoryTask.callDB(mSymbol);
     }
 
     @Override
@@ -67,16 +70,8 @@ public class StockDetailActivity extends AppCompatActivity
         LineGraphSeries<DataPoint> series = new LineGraphSeries<DataPoint>(dataPointArray);
         graphView.getViewport().setScalable(true);
         graphView.addSeries(series);
-        // Setting the graphView to format the date objects
-        // on the x axis to be readable
-        graphView.getGridLabelRenderer().setLabelFormatter(
-                new DateAsXAxisLabelFormatter(
-                        this, java.text.SimpleDateFormat.getDateInstance(java.text.SimpleDateFormat.SHORT)));
-
-        graphView.getViewport().setMinX(dataPoints.get(0).getX());
-        graphView.getViewport().setMaxX(dataPoints.get(10).getX());
-        graphView.getViewport().setXAxisBoundsManual(true);
-        graphView.getGridLabelRenderer().setHumanRounding(false);
+        graphView.setTitle(mSymbol + " past year");
+        graphView.getGridLabelRenderer().setHorizontalLabelsVisible(false);
         graphView.setVisibility(View.VISIBLE);
     }
 }

@@ -1,12 +1,13 @@
 package com.udacity.stockhawk.sync;
 
 import android.content.Context;
-import android.os.AsyncTask;
+import android.database.Cursor;
 import android.util.Log;
 
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.udacity.stockhawk.Events.HistoricalQuotesMappedToDataSetEvent;
+import com.udacity.stockhawk.data.Contract;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -24,46 +25,46 @@ import yahoofinance.histquotes.HistoricalQuote;
  * Created by ben.medcalf on 12/18/16.
  */
 
-public class GetSymbolChangeHistory extends AsyncTask<String, Void, List<HistoricalQuote>>
+public class GetSymbolChangeHistory
 {
-    @Override
-    protected List<HistoricalQuote> doInBackground(String... strings)
-    {
-        List<HistoricalQuote> historicalQuotes = null;
-        try
-        {
-            historicalQuotes = YahooFinance.get(strings[0]).getHistory();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+    private Context mContext;
 
-        return historicalQuotes;
+    public GetSymbolChangeHistory(Context mContext) {
+        this.mContext = mContext;
     }
 
-    @Override
-    protected void onPostExecute(List<HistoricalQuote> historicalQuotes)
+
+    public void callDB(String symbol)
     {
-        // Creating our iterator to iterate through the historical quotes
-        // returned by doInBackground
-        Iterator<HistoricalQuote> iterator = historicalQuotes.iterator();
+        String[] queryFields = new String[] {
+                Contract.Quote.COLUMN_HISTORY
+        };
+        String[] symbolArgs = new String[] {
+                symbol
+        };
 
-        // Newing up our ArrayList of DataPoints
         List<DataPoint> dataPoints = new ArrayList<>();
-//        int i = -1;
+        int i = -1;
 
-        // This while loop iterates through the list of HistoricalQuotes
-        // and adds the value of i as the first data point (to serve as the X axis) and the ClosePrice value
-        // taken from the historicalQuote as the second data point (Y Axis). Once the iteration is finished
-        // we will have an arraylist of DataPoints to send to our DetailActivity via
-        // HistoricalQuotesMappedToDataSetEvent
-        while (iterator.hasNext()) {
-            HistoricalQuote quote = iterator.next();
-            Date date = quote.getDate().getTime();
-            Double closePrice = quote.getClose().doubleValue();
-            dataPoints.add(new DataPoint(date, closePrice));
+        Cursor cursor =
+            mContext.getContentResolver().query(
+                    Contract.Quote.makeUriForStock(symbol), // table
+                    queryFields,                            // columns
+                    symbol,                                 // selection
+                    symbolArgs,                                   // selection args
+                    null
+            );
+        
 
+        //TODO: Need to find out why this is only iterating through once. I'm only getting 1st row back
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                i++;
+                // Passing in 0 as the column int in cursor.getDouble because there is
+                // only one column in the cursor we've created
+                dataPoints.add(new DataPoint(i, cursor.getDouble(0)));
+                cursor.moveToNext();
+            }
         }
 
         Log.d("DateArray: ", dataPoints.toString());
@@ -71,7 +72,38 @@ public class GetSymbolChangeHistory extends AsyncTask<String, Void, List<Histori
 
         HistoricalQuotesMappedToDataSetEvent event = new HistoricalQuotesMappedToDataSetEvent();
         event.setDataPoints(dataPoints);
-
         EventBus.getDefault().post(event);
     }
+
+//    @Override
+//    protected void onPostExecute(List<HistoricalQuote> historicalQuotes)
+//    {
+//        // Creating our iterator to iterate through the historical quotes
+//        // returned by doInBackground
+//        Iterator<HistoricalQuote> iterator = historicalQuotes.iterator();
+//
+//        // Newing up our ArrayList of DataPoints
+//        List<DataPoint> dataPoints = new ArrayList<>();
+//
+//        // Instantiating i for the loop
+//        int i = -1;
+//
+//        // This while loop iterates through the list of HistoricalQuotes
+//        // and adds the value of i as the first data point (to serve as the X axis) and the ClosePrice value
+//        // taken from the historicalQuote as the second data point (Y Axis). Once the iteration is finished
+//        // we will have an arraylist of DataPoints to send to our DetailActivity via
+//        // HistoricalQuotesMappedToDataSetEvent
+//        while (iterator.hasNext()) {
+//            HistoricalQuote quote = iterator.next();
+//
+//            i++;
+//            Double closePrice = quote.getClose().doubleValue();
+//            dataPoints.add(new DataPoint(i, closePrice));
+//        }
+//
+//        HistoricalQuotesMappedToDataSetEvent event = new HistoricalQuotesMappedToDataSetEvent();
+//        event.setDataPoints(dataPoints);
+//
+//        EventBus.getDefault().post(event);
+//    }
 }
