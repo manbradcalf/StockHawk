@@ -13,6 +13,7 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -25,8 +26,7 @@ import yahoofinance.histquotes.HistoricalQuote;
  * Created by ben.medcalf on 12/18/16.
  */
 
-public class GetSymbolChangeHistory
-{
+public class GetSymbolChangeHistory {
     private Context mContext;
 
     public GetSymbolChangeHistory(Context mContext) {
@@ -34,12 +34,11 @@ public class GetSymbolChangeHistory
     }
 
 
-    public void callDB(String symbol)
-    {
-        String[] queryFields = new String[] {
+    public void callDB(String symbol) {
+        String[] queryFields = new String[]{
                 Contract.Quote.COLUMN_HISTORY
         };
-        String[] symbolArgs = new String[] {
+        String[] symbolArgs = new String[]{
                 symbol
         };
 
@@ -47,25 +46,35 @@ public class GetSymbolChangeHistory
         int i = -1;
 
         Cursor cursor =
-            mContext.getContentResolver().query(
-                    Contract.Quote.makeUriForStock(symbol), // table
-                    queryFields,                            // columns
-                    symbol,                                 // selection
-                    symbolArgs,                                   // selection args
-                    null
-            );
-        
+                mContext.getContentResolver().query(
+                        Contract.Quote.makeUriForStock(symbol), // table
+                        queryFields,                            // columns
+                        symbol,                                 // selectionac
+                        symbolArgs,                                   // selection args
+                        null
+                );
 
-        //TODO: Need to find out why this is only iterating through once. I'm only getting 1st row back
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                i++;
-                // Passing in 0 as the column int in cursor.getDouble because there is
-                // only one column in the cursor we've created
-                dataPoints.add(new DataPoint(i, cursor.getDouble(0)));
-                cursor.moveToNext();
+        String firstHistory = cursor.getString(0);
+        String[] fullhistory = firstHistory.split(",");
+        List<String> history = Arrays.asList(fullhistory);
+        Iterator<String> iterator = history.iterator();
+        while (iterator.hasNext()) {
+            if (!iterator.next().contains(".")) {
+                iterator.remove();
             }
         }
+
+        //TODO: Need to find out why this is only iterating through once. I'm only getting 1st row back
+        while (iterator.hasNext()) {
+
+            if (iterator.next().contains(".")) {
+            i++;
+            Double d = Double.parseDouble(iterator.next());
+            // Passing in 0 as the column int in cursor.getDouble because there is
+            // only one column in the cursor we've created
+            dataPoints.add(new DataPoint(i, d));
+        }
+
 
         Log.d("DateArray: ", dataPoints.toString());
 
@@ -74,6 +83,7 @@ public class GetSymbolChangeHistory
         event.setDataPoints(dataPoints);
         EventBus.getDefault().post(event);
     }
+}
 
 //    @Override
 //    protected void onPostExecute(List<HistoricalQuote> historicalQuotes)
