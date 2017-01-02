@@ -54,27 +54,21 @@ public class GetSymbolChangeHistory {
                         null
                 );
 
-        String firstHistory = cursor.getString(0);
-        String[] fullhistory = firstHistory.split(",");
-        List<String> history = Arrays.asList(fullhistory);
-        Iterator<String> iterator = history.iterator();
-        while (iterator.hasNext()) {
-            if (!iterator.next().contains(".")) {
-                iterator.remove();
+        if (cursor.moveToFirst()) {
+            String[] firstHistory = cursor.getString(0).split(",|\\n");
+            List<String> history = Arrays.asList(firstHistory);
+            Iterator<String> iterator = history.iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next().contains(".")) {
+                    iterator.next().replace(" ", "");
+                    i++;
+                    Double d = Double.parseDouble(iterator.next());
+                    // Passing in 0 as the column int in cursor.getDouble because there is
+                    // only one column in the cursor we've created
+                    dataPoints.add(new DataPoint(i, d));
+                }
             }
         }
-
-        //TODO: Need to find out why this is only iterating through once. I'm only getting 1st row back
-        while (iterator.hasNext()) {
-
-            if (iterator.next().contains(".")) {
-            i++;
-            Double d = Double.parseDouble(iterator.next());
-            // Passing in 0 as the column int in cursor.getDouble because there is
-            // only one column in the cursor we've created
-            dataPoints.add(new DataPoint(i, d));
-        }
-
 
         Log.d("DateArray: ", dataPoints.toString());
 
@@ -116,4 +110,4 @@ public class GetSymbolChangeHistory {
 //
 //        EventBus.getDefault().post(event);
 //    }
-}
+//}
