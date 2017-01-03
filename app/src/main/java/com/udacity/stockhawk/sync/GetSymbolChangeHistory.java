@@ -1,7 +1,7 @@
 package com.udacity.stockhawk.sync;
-
 import android.content.Context;
 import android.database.Cursor;
+
 
 import com.jjoe64.graphview.series.DataPoint;
 import com.udacity.stockhawk.Events.HistoricalQuotesMappedToDataSetEvent;
@@ -24,6 +24,7 @@ public class GetSymbolChangeHistory {
     public GetSymbolChangeHistory(Context mContext) {
         this.mContext = mContext;
     }
+
 
 
     public void callDB(String symbol) {

@@ -1,14 +1,10 @@
 package com.udacity.stockhawk.ui;
 
-import android.graphics.DashPathEffect;
-import android.graphics.Paint;
-import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.udacity.stockhawk.Events.HistoricalQuotesMappedToDataSetEvent;
@@ -76,4 +72,5 @@ public class StockDetailActivity extends AppCompatActivity
         graphView.setTitle(mSymbol + " past 104 weeks");
         graphView.setVisibility(View.VISIBLE);
     }
+
 }
