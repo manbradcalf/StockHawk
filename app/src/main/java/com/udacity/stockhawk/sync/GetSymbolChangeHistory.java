@@ -2,25 +2,17 @@ package com.udacity.stockhawk.sync;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.udacity.stockhawk.Events.HistoricalQuotesMappedToDataSetEvent;
 import com.udacity.stockhawk.data.Contract;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
-
-import yahoofinance.YahooFinance;
-import yahoofinance.histquotes.HistoricalQuote;
 
 /**
  * Created by ben.medcalf on 12/18/16.
@@ -66,6 +58,10 @@ public class GetSymbolChangeHistory {
             // of my graph, because the graphview library I'm using doesn't elegantly show formatted
             // dates on the x axis.
             List<String> historyList = Arrays.asList(cursor.getString(0).split(",|\\n"));
+
+            // Reversing the list because the list is ordered from most to least recent.
+            // Since i'm incrementing i to be the x axis count for weeks, this is an issue.
+            Collections.reverse(historyList);
             for (String historyItem : historyList) {
                 if (historyItem.contains(".")) {
                     historyItem.replace(" ", "");
