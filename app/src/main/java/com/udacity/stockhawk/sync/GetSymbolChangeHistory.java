@@ -43,26 +43,34 @@ public class GetSymbolChangeHistory {
         };
 
         List<DataPoint> dataPoints = new ArrayList<>();
-        int i = -1;
 
         Cursor cursor =
                 mContext.getContentResolver().query(
                         Contract.Quote.makeUriForStock(symbol), // table
                         queryFields,                            // columns
-                        symbol,                                 // selectionac
-                        symbolArgs,                                   // selection args
+                        symbol,                                 // selection
+                        symbolArgs,                             // selection args
                         null
                 );
 
+        // i is going to represent a week on the graph's x axis
+        int i = -1;
+
         if (cursor.moveToFirst()) {
-            String[] firstHistory = cursor.getString(0).split(",|\\n");
-            List<String> history = Arrays.asList(firstHistory);
-            Iterator<String> iterator = history.iterator();
-            while (iterator.hasNext()) {
-                if (iterator.next().contains(".")) {
-                    iterator.next().replace(" ", "");
+            // The History is stored in SQL as one big String in a single row, formatted
+            // like a key:value pair. I'm creating this list here by getting that string from
+            // the cursor and splitting it on commas and newlines. Each item in this list
+            // is either a unix epoch time object or a double representing a price.
+            // In the for loop below, I check for a decimal, which tells me I have a price object,
+            // not a time object. I then increment "i", which I use to represent a week on the x axis
+            // of my graph, because the graphview library I'm using doesn't elegantly show formatted
+            // dates on the x axis.
+            List<String> historyList = Arrays.asList(cursor.getString(0).split(",|\\n"));
+            for (String historyItem : historyList) {
+                if (historyItem.contains(".")) {
+                    historyItem.replace(" ", "");
                     i++;
-                    Double d = Double.parseDouble(iterator.next());
+                    Double d = Double.parseDouble(historyItem);
                     // Passing in 0 as the column int in cursor.getDouble because there is
                     // only one column in the cursor we've created
                     dataPoints.add(new DataPoint(i, d));
@@ -70,44 +78,9 @@ public class GetSymbolChangeHistory {
             }
         }
 
-        Log.d("DateArray: ", dataPoints.toString());
-
-
+        // Creating the event and firing it, where StockDetailActivity is listening for it.
         HistoricalQuotesMappedToDataSetEvent event = new HistoricalQuotesMappedToDataSetEvent();
         event.setDataPoints(dataPoints);
         EventBus.getDefault().post(event);
     }
 }
-
-//    @Override
-//    protected void onPostExecute(List<HistoricalQuote> historicalQuotes)
-//    {
-//        // Creating our iterator to iterate through the historical quotes
-//        // returned by doInBackground
-//        Iterator<HistoricalQuote> iterator = historicalQuotes.iterator();
-//
-//        // Newing up our ArrayList of DataPoints
-//        List<DataPoint> dataPoints = new ArrayList<>();
-//
-//        // Instantiating i for the loop
-//        int i = -1;
-//
-//        // This while loop iterates through the list of HistoricalQuotes
-//        // and adds the value of i as the first data point (to serve as the X axis) and the ClosePrice value
-//        // taken from the historicalQuote as the second data point (Y Axis). Once the iteration is finished
-//        // we will have an arraylist of DataPoints to send to our DetailActivity via
-//        // HistoricalQuotesMappedToDataSetEvent
-//        while (iterator.hasNext()) {
-//            HistoricalQuote quote = iterator.next();
-//
-//            i++;
-//            Double closePrice = quote.getClose().doubleValue();
-//            dataPoints.add(new DataPoint(i, closePrice));
-//        }
-//
-//        HistoricalQuotesMappedToDataSetEvent event = new HistoricalQuotesMappedToDataSetEvent();
-//        event.setDataPoints(dataPoints);
-//
-//        EventBus.getDefault().post(event);
-//    }
-//}

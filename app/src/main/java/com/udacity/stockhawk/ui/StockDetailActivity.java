@@ -40,6 +40,7 @@ public class StockDetailActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
         setContentView(R.layout.stock_detail);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ButterKnife.bind(this);
@@ -53,7 +54,7 @@ public class StockDetailActivity extends AppCompatActivity
     @Override
     public void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
+
     }
 
     @Override
@@ -69,9 +70,10 @@ public class StockDetailActivity extends AppCompatActivity
         DataPoint[] dataPointArray = dataPoints.toArray(new DataPoint[0]);
         LineGraphSeries<DataPoint> series = new LineGraphSeries<DataPoint>(dataPointArray);
         graphView.getViewport().setScalable(true);
+        graphView.getViewport().setMinX(0);
+        graphView.getViewport().setMaxX(dataPoints.size());
         graphView.addSeries(series);
-        graphView.setTitle(mSymbol + " past year");
-        graphView.getGridLabelRenderer().setHorizontalLabelsVisible(false);
+        graphView.setTitle(mSymbol + " past 104 weeks");
         graphView.setVisibility(View.VISIBLE);
     }
 }
