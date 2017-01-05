@@ -3,14 +3,16 @@ package com.udacity.stockhawk.widget;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Binder;
-import android.support.v4.util.LogWriter;
-import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 import timber.log.Timber;
 
@@ -28,6 +30,7 @@ public class WidgetRemoteViewsService extends RemoteViewsService {
 
         return new RemoteViewsFactory() {
             private Cursor cursor = null;
+            private DecimalFormat dollarformat = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
             public void onCreate() {
 
             }
@@ -90,13 +93,21 @@ public class WidgetRemoteViewsService extends RemoteViewsService {
                 String symbol = cursor.getString(cursor.getColumnIndex(Contract.Quote.COLUMN_SYMBOL));
 
                 views.setTextViewText(R.id.symbol, symbol);
+
                 views.setTextViewTextSize(R.id.price, COMPLEX_UNIT_SP, 16);
-                views.setTextViewText(R.id.price, " $" + cursor.getString(cursor.getColumnIndex(Contract.Quote.COLUMN_PRICE)));
+
+                String price_string =
+                        dollarformat.format(cursor.getFloat(
+                                cursor.getColumnIndex(Contract.Quote.COLUMN_PRICE))
+                        );
+
+                views.setTextViewText(R.id.price, price_string);
+
                 views.setTextViewTextSize(R.id.change, COMPLEX_UNIT_SP, 16);
+
                 views.setTextViewText(R.id.change, cursor.getString(cursor.getColumnIndex(Contract.Quote.COLUMN_PERCENTAGE_CHANGE)) + "%");
 
-
-                if (cursor.getInt(cursor.getColumnIndex(Contract.Quote.COLUMN_ABSOLUTE_CHANGE)) > 0) {
+                if (cursor.getFloat(cursor.getColumnIndex(Contract.Quote.COLUMN_ABSOLUTE_CHANGE)) > 0) {
                     views.setInt(R.id.change, "setBackgroundResource", R.drawable.percent_change_pill_green);
                 } else {
                     views.setInt(R.id.change, "setBackgroundResource", R.drawable.percent_change_pill_red);
