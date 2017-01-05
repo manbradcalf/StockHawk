@@ -29,8 +29,6 @@ import com.udacity.stockhawk.sync.ValidateSymbol;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
-import java.io.IOException;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
@@ -98,18 +96,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         EventBus.getDefault().unregister(this);
     }
 
-    @Subscribe
-    public void onMessageEvent(SymbolValidationEvent event) {
-        Boolean validated = event.getValidated();
-        if (validated) {
-            swipeRefreshLayout.setRefreshing(true);
-            PrefUtils.addStock(this, event.getSymbol());
-            QuoteSyncJob.syncImmediately(this);
-        } else {
-            swipeRefreshLayout.setRefreshing(false);
-            Toast.makeText(this, "Stock Symbol not found", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     private boolean networkUp() {
         ConnectivityManager cm =
@@ -211,5 +197,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Subscribe
+    public void onMessageEvent(SymbolValidationEvent event) {
+        Boolean validated = event.getValidated();
+        if (validated) {
+            swipeRefreshLayout.setRefreshing(true);
+            PrefUtils.addStock(this, event.getSymbol());
+            QuoteSyncJob.syncImmediately(this);
+        } else {
+            swipeRefreshLayout.setRefreshing(false);
+            Toast.makeText(this, "Stock Symbol not found", Toast.LENGTH_SHORT).show();
+        }
     }
 }
