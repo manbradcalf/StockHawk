@@ -2,6 +2,7 @@ package com.udacity.stockhawk.sync;
 
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,9 +10,10 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
-import com.udacity.stockhawk.widget.WidgetRemoteViewsService;
+import com.udacity.stockhawk.widget.WidgetProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -133,6 +135,12 @@ public final class QuoteSyncJob
             Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
             context.sendBroadcast(dataUpdatedIntent);
 
+            // Notify the WidgetRemoteViewsService that there was an update so the widget
+            // is then refreshed with new data
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            int appWidgetIds[] = appWidgetManager.getAppWidgetIds(
+                    new ComponentName(context, WidgetProvider.class));
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_listview);
 
         }
         catch (IOException exception)
@@ -177,9 +185,7 @@ public final class QuoteSyncJob
         if (networkInfo != null && networkInfo.isConnectedOrConnecting())
         {
             Intent nowIntent = new Intent(context, QuoteIntentService.class);
-            Intent widgetIntent = new Intent(context, WidgetRemoteViewsService.class);
             context.startService(nowIntent);
-            context.startService(widgetIntent);
         }
         else
         {
