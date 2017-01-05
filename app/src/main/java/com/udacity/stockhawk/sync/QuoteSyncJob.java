@@ -11,6 +11,7 @@ import android.net.NetworkInfo;
 
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
+import com.udacity.stockhawk.widget.WidgetRemoteViewsService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,19 +90,26 @@ public final class QuoteSyncJob
                 float price = quote.getPrice().floatValue();
                 float change = quote.getChange().floatValue();
                 float percentChange = quote.getChangeInPercent().floatValue();
+                List<HistoricalQuote> history = null;
 
                 // WARNING! Don't request historical data for a stock that doesn't exist!
                 // The request will hang forever X_x
-                List<HistoricalQuote> history = stock.getHistory(from, to, Interval.WEEKLY);
+                try {
+                    history = stock.getHistory(from, to, Interval.WEEKLY);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 StringBuilder historyBuilder = new StringBuilder();
 
-                for (HistoricalQuote it : history)
-                {
-                    historyBuilder.append(it.getDate().getTimeInMillis());
-                    historyBuilder.append(", ");
-                    historyBuilder.append(it.getClose());
-                    historyBuilder.append("\n");
+
+                if (history != null) {
+                    for (HistoricalQuote it : history) {
+                        historyBuilder.append(it.getDate().getTimeInMillis());
+                        historyBuilder.append(", ");
+                        historyBuilder.append(it.getClose());
+                        historyBuilder.append("\n");
+                    }
                 }
 
                 ContentValues quoteCV = new ContentValues();
@@ -124,7 +132,7 @@ public final class QuoteSyncJob
 
             Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
             context.sendBroadcast(dataUpdatedIntent);
-            //TODO: Register a receiver in main activity.
+
 
         }
         catch (IOException exception)
@@ -169,7 +177,9 @@ public final class QuoteSyncJob
         if (networkInfo != null && networkInfo.isConnectedOrConnecting())
         {
             Intent nowIntent = new Intent(context, QuoteIntentService.class);
+            Intent widgetIntent = new Intent(context, WidgetRemoteViewsService.class);
             context.startService(nowIntent);
+            context.startService(widgetIntent);
         }
         else
         {
