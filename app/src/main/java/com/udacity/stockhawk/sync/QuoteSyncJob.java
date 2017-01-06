@@ -2,6 +2,7 @@ package com.udacity.stockhawk.sync;
 
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,8 +10,10 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
+import com.udacity.stockhawk.widget.WidgetProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,19 +92,26 @@ public final class QuoteSyncJob
                 float price = quote.getPrice().floatValue();
                 float change = quote.getChange().floatValue();
                 float percentChange = quote.getChangeInPercent().floatValue();
+                List<HistoricalQuote> history = null;
 
                 // WARNING! Don't request historical data for a stock that doesn't exist!
                 // The request will hang forever X_x
-                List<HistoricalQuote> history = stock.getHistory(from, to, Interval.WEEKLY);
+                try {
+                    history = stock.getHistory(from, to, Interval.WEEKLY);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 StringBuilder historyBuilder = new StringBuilder();
 
-                for (HistoricalQuote it : history)
-                {
-                    historyBuilder.append(it.getDate().getTimeInMillis());
-                    historyBuilder.append(", ");
-                    historyBuilder.append(it.getClose());
-                    historyBuilder.append("\n");
+
+                if (history != null) {
+                    for (HistoricalQuote it : history) {
+                        historyBuilder.append(it.getDate().getTimeInMillis());
+                        historyBuilder.append(", ");
+                        historyBuilder.append(it.getClose());
+                        historyBuilder.append("\n");
+                    }
                 }
 
                 ContentValues quoteCV = new ContentValues();
@@ -124,7 +134,13 @@ public final class QuoteSyncJob
 
             Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
             context.sendBroadcast(dataUpdatedIntent);
-            //TODO: Register a receiver in main activity.
+
+            // Notify the WidgetRemoteViewsService that there was an update so the widget
+            // is then refreshed with new data
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            int appWidgetIds[] = appWidgetManager.getAppWidgetIds(
+                    new ComponentName(context, WidgetProvider.class));
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_listview);
 
         }
         catch (IOException exception)
