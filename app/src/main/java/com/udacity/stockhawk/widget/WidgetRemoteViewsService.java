@@ -93,6 +93,7 @@ public class WidgetRemoteViewsService extends RemoteViewsService {
                 String symbol = cursor.getString(cursor.getColumnIndex(Contract.Quote.COLUMN_SYMBOL));
 
                 views.setTextViewText(R.id.symbol, symbol);
+                views.setTextViewTextSize(R.id.symbol, COMPLEX_UNIT_SP, 24);
 
                 views.setTextViewTextSize(R.id.price, COMPLEX_UNIT_SP, 16);
 
