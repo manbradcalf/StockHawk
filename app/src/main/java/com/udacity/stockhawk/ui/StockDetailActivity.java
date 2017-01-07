@@ -69,7 +69,7 @@ public class StockDetailActivity extends AppCompatActivity
         graphView.getViewport().setMinX(0);
         graphView.getViewport().setMaxX(dataPoints.size());
         graphView.addSeries(series);
-        graphView.setTitle(mSymbol + " past 104 weeks");
+        graphView.setTitle(mSymbol + " " + getString(R.string.past_104_weeks));
         graphView.setVisibility(View.VISIBLE);
     }
 
