@@ -2,6 +2,7 @@ package com.udacity.stockhawk.sync;
 
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,8 +10,10 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
+import com.udacity.stockhawk.widget.WidgetProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +31,8 @@ import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
 import yahoofinance.quotes.stock.StockQuote;
 
-public final class QuoteSyncJob {
+public final class QuoteSyncJob
+{
 
     private static final int ONE_OFF_ID = 2;
     private static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
@@ -37,10 +41,12 @@ public final class QuoteSyncJob {
     private static final int PERIODIC_ID = 1;
     private static final int YEARS_OF_HISTORY = 2;
 
-    private QuoteSyncJob() {
+    private QuoteSyncJob()
+    {
     }
 
-    static void getQuotes(Context context) {
+    static void getQuotes(Context context)
+    {
 
         Timber.d("Running sync job");
 
@@ -48,7 +54,8 @@ public final class QuoteSyncJob {
         Calendar to = Calendar.getInstance();
         from.add(Calendar.YEAR, -YEARS_OF_HISTORY);
 
-        try {
+        try
+        {
 
             Set<String> stockPref = PrefUtils.getStocks(context);
             Set<String> stockCopy = new HashSet<>();
@@ -57,7 +64,8 @@ public final class QuoteSyncJob {
 
             Timber.d(stockCopy.toString());
 
-            if (stockArray.length == 0) {
+            if (stockArray.length == 0)
+            {
                 return;
             }
 
@@ -68,28 +76,42 @@ public final class QuoteSyncJob {
 
             ArrayList<ContentValues> quoteCVs = new ArrayList<>();
 
-            while (iterator.hasNext()) {
+            while (iterator.hasNext())
+            {
                 String symbol = iterator.next();
 
 
                 Stock stock = quotes.get(symbol);
                 StockQuote quote = stock.getQuote();
 
+                if (quote.getPrice() == null || quote.getChange() == null || quote.getChangeInPercent() == null)
+                {
+                    continue;
+                }
+
                 float price = quote.getPrice().floatValue();
                 float change = quote.getChange().floatValue();
                 float percentChange = quote.getChangeInPercent().floatValue();
+                List<HistoricalQuote> history = null;
 
                 // WARNING! Don't request historical data for a stock that doesn't exist!
                 // The request will hang forever X_x
-                List<HistoricalQuote> history = stock.getHistory(from, to, Interval.WEEKLY);
+                try {
+                    history = stock.getHistory(from, to, Interval.WEEKLY);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 StringBuilder historyBuilder = new StringBuilder();
 
-                for (HistoricalQuote it : history) {
-                    historyBuilder.append(it.getDate().getTimeInMillis());
-                    historyBuilder.append(", ");
-                    historyBuilder.append(it.getClose());
-                    historyBuilder.append("\n");
+
+                if (history != null) {
+                    for (HistoricalQuote it : history) {
+                        historyBuilder.append(it.getDate().getTimeInMillis());
+                        historyBuilder.append(", ");
+                        historyBuilder.append(it.getClose());
+                        historyBuilder.append("\n");
+                    }
                 }
 
                 ContentValues quoteCV = new ContentValues();
@@ -113,12 +135,22 @@ public final class QuoteSyncJob {
             Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED);
             context.sendBroadcast(dataUpdatedIntent);
 
-        } catch (IOException exception) {
+            // Notify the WidgetRemoteViewsService that there was an update so the widget
+            // is then refreshed with new data
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            int appWidgetIds[] = appWidgetManager.getAppWidgetIds(
+                    new ComponentName(context, WidgetProvider.class));
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_listview);
+
+        }
+        catch (IOException exception)
+        {
             Timber.e(exception, "Error fetching stock quotes");
         }
     }
 
-    private static void schedulePeriodic(Context context) {
+    private static void schedulePeriodic(Context context)
+    {
         Timber.d("Scheduling a periodic task");
 
 
@@ -136,22 +168,27 @@ public final class QuoteSyncJob {
     }
 
 
-    public static synchronized void initialize(final Context context) {
+    public static synchronized void initialize(final Context context)
+    {
 
         schedulePeriodic(context);
         syncImmediately(context);
 
     }
 
-    public static synchronized void syncImmediately(Context context) {
+    public static synchronized void syncImmediately(Context context)
+    {
 
         ConnectivityManager cm =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnectedOrConnecting()) {
+        if (networkInfo != null && networkInfo.isConnectedOrConnecting())
+        {
             Intent nowIntent = new Intent(context, QuoteIntentService.class);
             context.startService(nowIntent);
-        } else {
+        }
+        else
+        {
 
             JobInfo.Builder builder = new JobInfo.Builder(ONE_OFF_ID, new ComponentName(context, QuoteJobService.class));
 
