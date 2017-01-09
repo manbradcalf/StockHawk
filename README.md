@@ -105,4 +105,5 @@ the start/end tags.
 * Strings are all included in the strings.xml file and untranslatable strings 
 have a translatable tag marked to false.
 
-
+![screen] (https://github.com/manbradcalf/StockHawk/blob/master/device-2017-01-08-194348.png?raw=true)
+![screen] (https://github.com/manbradcalf/StockHawk/blob/master/device-2017-01-08-194747.png?raw=true)
