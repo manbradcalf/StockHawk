@@ -34,5 +34,6 @@
     <string name="widget_title">Stock Hawk</string>
     <string name="widget_title_string">Stock Hawk</string>
     <string name="past_104_weeks">past 104 weeks</string>
+    <string name="fab_description">Add a stock</string>
 
 </resources>
